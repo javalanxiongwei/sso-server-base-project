@@ -34,9 +34,13 @@ public class SSOServerController {
             // 会找/WEB-INF/views/login.jsp视图
             return "login";
         }else{
+            /**---------------------------阶段三添加的代码start--------------------**/
             //有全局会话
-            //目前这段逻辑我们先不写,按着图解流程编写代码
-            return "";
+            //取出令牌信息,重定向到redirectUrl,把令牌带上
+            // http://www.wms.com:8089/main?token=
+            model.addAttribute("token",token);
+            /**---------------------------阶段三添加的代码end-----------------------**/
+            return "redirect:"+redirectUrl;
         }
     }
 
