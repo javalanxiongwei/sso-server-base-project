@@ -1,6 +1,7 @@
 package cn.wolfcode.sso.controller;
 
 import cn.wolfcode.sso.util.MockDatabaseUtil;
+import cn.wolfcode.sso.vo.ClientInfoVo;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -79,12 +82,32 @@ public class SSOServerController {
      */
     @RequestMapping("/verify")
     @ResponseBody
-    public String verifyToken(String token){
+    public String verifyToken(String token,String clientUrl,String jsessionid){
         //在模拟的数据库表t_token中查找是否有这条记录
         if(MockDatabaseUtil.T_TOKEN.contains(token)){
+            //根据token获取客户端的登出地址记录集合
+            List<ClientInfoVo> clientInfoList = MockDatabaseUtil.T_CLIENT_INFO.get(token);
+            if(clientInfoList==null){
+                //第一个系统注册的时候获取出来的集合空的,所以需要创建一个
+                clientInfoList = new ArrayList<ClientInfoVo>();
+                //创建好之后需要放入到map中,方便后续的获取
+                MockDatabaseUtil.T_CLIENT_INFO.put(token,clientInfoList);
+            }
+            //封装客户端的信息
+            ClientInfoVo vo = new ClientInfoVo();
+            vo.setClientUrl(clientUrl);
+            vo.setJsessionid(jsessionid);
+            //把当前的客户端地址注册到集合中.
+            clientInfoList.add(vo);
             //说明令牌有效,返回true
             return "true";
         }
         return "false";
+    }
+    @RequestMapping("/logOut")
+    public String logOut(HttpSession session){
+        //销毁全局会话
+        session.invalidate();
+        return "logOut";
     }
 }
